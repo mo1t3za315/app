@@ -37,7 +37,11 @@ class VpnBlock extends Bloc<VpnEvent, VpnState> {
     on<IpVpn>(_ipchanged);
   }
 
-  _onstatusChanged(VpnStatus? data) {}
+  _onstatusChanged(VpnStatus? data) {
+    if (data != null) {
+
+    }
+  }
 
   _onStageChanged(VPNStage stage, String rawStage) {
     print(" poro: ${rawStage}");
@@ -103,7 +107,7 @@ class VpnBlock extends Bloc<VpnEvent, VpnState> {
       emit(Vpndisconnected());
     }
 
-    if (event.stage == "wait_connection") {
+    if (event.stage == "wait_connection" ||event.stage == "vpn_generate_config" ||event.stage == "resolve"||event.stage == "tcp_connect") {
       emit(Vpnconnecting());
     }
 
@@ -194,7 +198,7 @@ class SetingBlock extends Bloc<SetingEvent, SetingState> {
     if (response.statusCode == 200) {
       var result = jsonDecode(response.body);
       String version = result['version'];
-      String appversion = "1.0.0";
+      String appversion = "1.0.1";
       List<int> api = version.split('.').map(int.parse).toList();
       List<int> app = appversion.split('.').map(int.parse).toList();
 

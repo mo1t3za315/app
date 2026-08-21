@@ -5,6 +5,18 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
+
+import 'package:flutter/services.dart';
+
+class NativeOpenVPN {
+  static const MethodChannel _channel = MethodChannel('native_openvpn');
+
+
+  static Future<bool> disconnect() async {
+    final bool result = await _channel.invokeMethod('disconnect');
+    return result;
+  }
+}
 class VpnService {
   // static final VpnService _instance = VpnService._internal();
   //

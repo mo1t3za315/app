@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -135,7 +136,7 @@ class _HomePageState extends State<HomePage> {
                 builder: (context, state) {
                   return GestureDetector(
                     onTap: () async {
-                      if (ConfigUrl == "") {
+                      if (ConfigUrl == ""&& state is Vpndisconnected) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Server not selected'),
@@ -143,28 +144,27 @@ class _HomePageState extends State<HomePage> {
                           ),
                         );
                       } else {
-                        // final file = await VpnService().downloadConfig(
-                        //   "https://ik.imagekit.io/frsktypfv6/AL.ovpn",
-                        // );
 
-                        final file = await VpnService().downloadConfig(
-                          ConfigUrl,
-                        );
+                        final file;
+                        final conf;
 
-                        // print(file.path);
-                        // print(await file.exists());
+                        if(ConfigUrl != "" && state is Vpndisconnected){
 
-                        // final config = await file.readAsString();
+                          file = await VpnService().downloadConfig(
+                            ConfigUrl,
+                          );
+                          conf = await file.readAsString();
 
-                        // debugPrint(config);
 
-                        final conf = await file.readAsString();
+                        }else{
+                          file="";
+                          conf="";
+                        }
 
-                        // await VpnService().connect(
-                        //   config: conf,
-                        //   username: username,
-                        //   password: password,
-                        // );
+
+
+
+
 
                         if (state is Vpndisconnected) {
                           context.read<VpnBlock>().add(
@@ -175,8 +175,10 @@ class _HomePageState extends State<HomePage> {
                             ),
                           );
                         }
-                        // print(state);
-                        if (state != Vpndisconnected) {
+                        print(state);
+                        if (state is Vpnconnected || state is Vpnconnecting) {
+
+                          print("disconnect");
                           context.read<VpnBlock>().add(DisconectVpn());
                           print("dis : $state");
                         }
@@ -1233,7 +1235,34 @@ class _WebViewPageState extends State<WebViewPage> {
 
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadRequest(Uri.parse(widget.url))
+    ..setNavigationDelegate(NavigationDelegate(onNavigationRequest:(request)async {
+
+      final uri = Uri.tryParse(request.url);
+
+      if (uri == null) {
+        return NavigationDecision.prevent;
+      }
+
+
+      if (uri.scheme == 'http' || uri.scheme == 'https') {
+        return NavigationDecision.navigate;
+      }
+
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        return NavigationDecision.prevent;
+      }
+
+      return NavigationDecision.prevent;
+
+    },));
+
   }
 
   @override
